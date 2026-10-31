@@ -51,6 +51,10 @@
         android:title="@string/autofill_setup"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_floating_codes_stop"
+        android:title="@string/floating_codes_stop"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_floating_codes"
         android:title="@string/floating_codes_start"
         app:showAsAction="never" />

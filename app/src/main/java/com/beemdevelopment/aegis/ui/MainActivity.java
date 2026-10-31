@@ -1100,6 +1100,9 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
                         Uri.parse("package:" + getPackageName()));
                 startActivity(intent);
             }
+        } else if (itemId == R.id.action_floating_codes_stop) {
+            stopService(new Intent(this, com.beemdevelopment.aegis.services.FloatingCodesService.class));
+            Toast.makeText(this, R.string.floating_stopped, Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.action_floating_codes) {
             if (!Settings.canDrawOverlays(this)) {
                 Toast.makeText(this, R.string.floating_permission, Toast.LENGTH_LONG).show();
