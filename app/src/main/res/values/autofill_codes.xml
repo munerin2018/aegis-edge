@@ -1,0 +1,8 @@
+<resources>
+    <string name="autofill_service_name">Aegis codes</string>
+    <string name="autofill_setup">Set up Android autofill</string>
+    <string name="autofill_pick">Choose a code in Aegis</string>
+    <string name="autofill_destination">Requesting app: %1$s\nWebsite reported by app: %2$s\nThe website and app are not verified. Check them before choosing a code.</string>
+    <string name="autofill_no_website">Not provided</string>
+    <string name="autofill_no_entries">No matching entries. Open Aegis to choose a code.</string>
+</resources>

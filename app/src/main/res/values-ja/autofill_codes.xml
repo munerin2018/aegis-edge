@@ -1,0 +1,8 @@
+<resources>
+    <string name="autofill_service_name">Aegis 認証コード</string>
+    <string name="autofill_setup">Android の自動入力を設定</string>
+    <string name="autofill_pick">Aegis でコードを選択</string>
+    <string name="autofill_destination">要求元アプリ: %1$s\nアプリが申告したサイト: %2$s\nサイトとアプリの正当性は未検証です。入力先を確認してコードを選んでください。</string>
+    <string name="autofill_no_website">情報なし</string>
+    <string name="autofill_no_entries">一致する項目がありません。Aegis を開いてコードを選択してください。</string>
+</resources>

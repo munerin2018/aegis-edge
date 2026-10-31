@@ -47,6 +47,14 @@
         </menu>
     </item>
     <item
+        android:id="@+id/action_autofill_setup"
+        android:title="@string/autofill_setup"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_floating_codes"
+        android:title="@string/floating_codes_start"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"

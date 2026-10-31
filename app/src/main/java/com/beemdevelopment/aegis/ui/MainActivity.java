@@ -166,6 +166,15 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
     private final ActivityResultLauncher<Intent> preferenceResultLauncher =
             registerForActivityResult(new StartActivityForResult(), activityResult -> onPreferencesResult());
 
+    private final ActivityResultLauncher<Intent> floatingPermissionLauncher =
+            registerForActivityResult(new StartActivityForResult(), result -> {
+                if (Settings.canDrawOverlays(this)) {
+                    startFloatingCodes();
+                } else {
+                    Toast.makeText(this, R.string.floating_permission, Toast.LENGTH_LONG).show();
+                }
+            });
+
     private final ActivityResultLauncher<Intent> editEntryResultLauncher =
             registerForActivityResult(new StartActivityForResult(), activityResult -> {
                 if (activityResult.getResultCode() != RESULT_OK || activityResult.getData() == null) {
@@ -1085,7 +1094,21 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.action_settings) {
+        if (itemId == R.id.action_autofill_setup) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE,
+                        Uri.parse("package:" + getPackageName()));
+                startActivity(intent);
+            }
+        } else if (itemId == R.id.action_floating_codes) {
+            if (!Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, R.string.floating_permission, Toast.LENGTH_LONG).show();
+                floatingPermissionLauncher.launch(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName())));
+            } else {
+                startFloatingCodes();
+            }
+        } else if (itemId == R.id.action_settings) {
             startPreferencesActivity();
         } else if (itemId == R.id.action_about) {
             Intent intent = new Intent(this, AboutActivity.class);
@@ -1122,6 +1145,12 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
         }
 
         return true;
+    }
+
+    private void startFloatingCodes() {
+        Intent service = new Intent(this, com.beemdevelopment.aegis.services.FloatingCodesService.class);
+        androidx.core.content.ContextCompat.startForegroundService(this, service);
+        Toast.makeText(this, R.string.floating_started, Toast.LENGTH_LONG).show();
     }
 
     private void collapseSearchView() {

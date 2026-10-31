@@ -71,8 +71,8 @@ android {
         debug {
             applicationIdSuffix ".debug"
             manifestPlaceholders = [
-                title: "AegisDev",
-                iconName: "ic_launcher_debug",
+                title: "Aegis Edge Dev",
+                iconName: "ic_edge",
                 fileProviderAuthority: "${fileProviderAuthorityDebug}"
             ]
             buildConfigField("String", "FILE_PROVIDER_AUTHORITY", "\"${fileProviderAuthorityDebug}\"")
@@ -80,8 +80,8 @@ android {
         }
         release {
             manifestPlaceholders = [
-                title: "Aegis",
-                iconName: "ic_launcher",
+                title: "Aegis Edge",
+                iconName: "ic_edge",
                 fileProviderAuthority: "${fileProviderAuthority}"
             ]
             buildConfigField("String", "FILE_PROVIDER_AUTHORITY", "\"${fileProviderAuthority}\"")
