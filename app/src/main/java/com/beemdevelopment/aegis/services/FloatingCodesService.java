@@ -70,7 +70,8 @@ public class FloatingCodesService extends Service {
             int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                     ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
             shortcutParams = new WindowManager.LayoutParams(visibleWidth, iconSize, type,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_SECURE,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_SECURE
+                            | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                     PixelFormat.TRANSLUCENT);
             shortcutParams.gravity = Gravity.END | Gravity.TOP;
             shortcutParams.y = (int) (120 * getResources().getDisplayMetrics().density);
@@ -84,7 +85,10 @@ public class FloatingCodesService extends Service {
             });
             shortcut.setOnLongClickListener(v -> { stopSelf(); return true; });
             shortcut.setOnTouchListener((v, event) -> {
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                if (event.getActionMasked() == MotionEvent.ACTION_OUTSIDE) {
+                    if (expanded) setExpanded(false);
+                    return false;
+                } else if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
                     touchStartX = event.getRawX();
                     swiped = false;
                 } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && !swiped) {
