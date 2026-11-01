@@ -18,6 +18,7 @@ import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.FrameLayout;
@@ -102,6 +103,9 @@ public class FloatingCodesService extends Service {
                             | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                     PixelFormat.TRANSLUCENT);
             shortcutParams.gravity = (onLeft ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                shortcutParams.setFitInsetsSides(WindowInsets.Side.TOP | WindowInsets.Side.BOTTOM);
+            }
             shortcutParams.y = clampY(positionPrefs.getInt("top", (int) (120 * density)));
             updateHiddenAppearance();
             shortcut.setOnClickListener(v -> {
@@ -264,6 +268,8 @@ public class FloatingCodesService extends Service {
         } else {
             shortcut.setBackground(null);
         }
+        // 背景の余白がアイコンの配置に引き継がれないようにする。
+        shortcut.setPadding(0, 0, 0, 0);
     }
 
     private void showRemoveTarget() {
