@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.InsetDrawable;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -96,7 +97,7 @@ public class FloatingCodesService extends Service {
                     (onLeft ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL));
             int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                     ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
-            shortcutParams = new WindowManager.LayoutParams(hidden ? hiddenWidth : visibleWidth, iconSize, type,
+            shortcutParams = new WindowManager.LayoutParams(visibleWidth, iconSize, type,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_SECURE
                             | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                     PixelFormat.TRANSLUCENT);
@@ -235,7 +236,7 @@ public class FloatingCodesService extends Service {
         expanded = show;
         icon.setAlpha(show ? 1f : 0.55f);
         if (slideAnimator != null) slideAnimator.cancel();
-        slideAnimator = ValueAnimator.ofInt(shortcutParams.width, show ? iconSize : (hidden ? hiddenWidth : visibleWidth));
+        slideAnimator = ValueAnimator.ofInt(shortcutParams.width, show ? iconSize : visibleWidth);
         slideAnimator.setDuration(160);
         slideAnimator.addUpdateListener(animation -> {
             shortcutParams.width = (int) animation.getAnimatedValue();
@@ -257,7 +258,9 @@ public class FloatingCodesService extends Service {
             GradientDrawable rim = new GradientDrawable();
             rim.setColor(0x66808080);
             rim.setCornerRadius(8 * getResources().getDisplayMetrics().density);
-            shortcut.setBackground(rim);
+            int transparentWidth = visibleWidth - hiddenWidth;
+            shortcut.setBackground(new InsetDrawable(rim, onLeft ? 0 : transparentWidth, 0,
+                    onLeft ? transparentWidth : 0, 0));
         } else {
             shortcut.setBackground(null);
         }
