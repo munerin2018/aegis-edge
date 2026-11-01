@@ -1,9 +1,10 @@
 <resources>
     <string name="floating_codes_start">画面端の認証コードを開始</string>
     <string name="floating_permission">他のアプリの上への表示を許可して、Aegis に戻ってください。</string>
-    <string name="floating_started">画面端をタップかスワイプしてアイコンを出し、もう一度タップ。長押しして移動できます。</string>
+    <string name="floating_started">内側へスワイプかタップで表示、外側へスワイプで収納。長押しで移動、×に重ねて終了。</string>
     <string name="floating_codes_stop">画面端の認証コードを終了</string>
     <string name="floating_stopped">画面端のアイコンを終了しました</string>
+    <string name="floating_drop_to_stop">ここに重ねると画面端のアイコンを終了</string>
     <string name="floating_expand">Aegis のアイコンを表示</string>
     <string name="floating_open">認証コードを開く</string>
     <string name="floating_notification">画面端の認証コードボタンを表示中</string>

@@ -3,11 +3,13 @@ package com.beemdevelopment.aegis.ui;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ClipData;
+import android.content.BroadcastReceiver;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
@@ -56,6 +58,7 @@ import com.beemdevelopment.aegis.icons.IconType;
 import com.beemdevelopment.aegis.otp.GoogleAuthInfo;
 import com.beemdevelopment.aegis.otp.GoogleAuthInfoException;
 import com.beemdevelopment.aegis.otp.OtpInfoException;
+import com.beemdevelopment.aegis.services.FloatingCodesService;
 import com.beemdevelopment.aegis.ui.dialogs.Dialogs;
 import com.beemdevelopment.aegis.ui.fragments.preferences.BackupsPreferencesFragment;
 import com.beemdevelopment.aegis.ui.fragments.preferences.PreferencesFragment;
@@ -112,6 +115,9 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
     private List<VaultEntry> _selectedEntries;
 
     private Menu _menu;
+    private final BroadcastReceiver floatingStateReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) { invalidateOptionsMenu(); }
+    };
     private SearchView _searchView;
     private EntryListView _entryListView;
 
@@ -201,6 +207,9 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        androidx.core.content.ContextCompat.registerReceiver(this, floatingStateReceiver,
+                new IntentFilter(FloatingCodesService.ACTION_STATE_CHANGED),
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.toolbar));
         ViewHelper.setupAppBarInsets(findViewById(R.id.app_bar_layout));
@@ -404,6 +413,7 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
     @Override
     protected void onDestroy() {
         _entryListView.setListener(null);
+        unregisterReceiver(floatingStateReceiver);
         super.onDestroy();
     }
 
@@ -1092,6 +1102,16 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem floating = menu.findItem(R.id.action_floating_codes);
+        if (floating != null) {
+            floating.setTitle(FloatingCodesService.isRunning()
+                    ? R.string.floating_codes_stop : R.string.floating_codes_start);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == R.id.action_autofill_setup) {
@@ -1100,11 +1120,11 @@ public class MainActivity extends AegisActivity implements EntryListView.Listene
                         Uri.parse("package:" + getPackageName()));
                 startActivity(intent);
             }
-        } else if (itemId == R.id.action_floating_codes_stop) {
-            stopService(new Intent(this, com.beemdevelopment.aegis.services.FloatingCodesService.class));
-            Toast.makeText(this, R.string.floating_stopped, Toast.LENGTH_SHORT).show();
         } else if (itemId == R.id.action_floating_codes) {
-            if (!Settings.canDrawOverlays(this)) {
+            if (FloatingCodesService.isRunning()) {
+                stopService(new Intent(this, FloatingCodesService.class));
+                Toast.makeText(this, R.string.floating_stopped, Toast.LENGTH_SHORT).show();
+            } else if (!Settings.canDrawOverlays(this)) {
                 Toast.makeText(this, R.string.floating_permission, Toast.LENGTH_LONG).show();
                 floatingPermissionLauncher.launch(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + getPackageName())));

@@ -1,9 +1,10 @@
 <resources>
     <string name="floating_codes_start">Start floating codes</string>
     <string name="floating_permission">Allow display over other apps, then return to Aegis.</string>
-    <string name="floating_started">Tap or swipe the edge icon to reveal it, then tap again. Long press and drag to move.</string>
+    <string name="floating_started">Tap or swipe inward to reveal; swipe outward to hide. Drag to move or drop on × to stop.</string>
     <string name="floating_codes_stop">Stop floating codes</string>
     <string name="floating_stopped">Floating icon stopped</string>
+    <string name="floating_drop_to_stop">Drop here to stop the floating icon</string>
     <string name="floating_expand">Show Aegis icon</string>
     <string name="floating_open">Open authentication codes</string>
     <string name="floating_notification">Floating codes shortcut is active</string>
