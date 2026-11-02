@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.InsetDrawable;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -38,6 +37,7 @@ public class FloatingCodesService extends Service {
     private WindowManager windows;
     private FrameLayout shortcut;
     private ImageView icon;
+    private View edgeBar;
     private WindowManager.LayoutParams shortcutParams;
     private ValueAnimator slideAnimator;
     private int iconSize;
@@ -100,6 +100,13 @@ public class FloatingCodesService extends Service {
             touchHeight = iconSize + 2 * verticalMargin;
             shortcut.addView(icon, new FrameLayout.LayoutParams(iconSize, iconSize,
                     (onLeft ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL));
+            edgeBar = new View(this);
+            GradientDrawable barBackground = new GradientDrawable();
+            barBackground.setColor(0x992ad7e8);
+            barBackground.setCornerRadius(4 * density);
+            edgeBar.setBackground(barBackground);
+            shortcut.addView(edgeBar, new FrameLayout.LayoutParams(hiddenWidth, iconSize,
+                    (onLeft ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL));
             int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                     ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
             shortcutParams = new WindowManager.LayoutParams(visibleWidth, touchHeight, type,
@@ -200,6 +207,7 @@ public class FloatingCodesService extends Service {
         dragStartX = clampX(location[0]);
         dragStartY = shortcutParams.y;
         expanded = true;
+        updateHiddenAppearance();
         icon.setAlpha(1f);
         shortcutParams.width = iconSize;
         shortcutParams.gravity = Gravity.LEFT | Gravity.TOP;
@@ -246,6 +254,7 @@ public class FloatingCodesService extends Service {
     private void setExpanded(boolean show) {
         if (shortcut == null || shortcutParams == null) return;
         expanded = show;
+        updateHiddenAppearance();
         icon.setAlpha(show ? 1f : 0.55f);
         if (slideAnimator != null) slideAnimator.cancel();
         slideAnimator = ValueAnimator.ofInt(shortcutParams.width, show ? iconSize : visibleWidth);
@@ -271,19 +280,12 @@ public class FloatingCodesService extends Service {
     }
 
     private void updateHiddenAppearance() {
-        icon.setVisibility(hidden ? View.INVISIBLE : View.VISIBLE);
-        if (hidden) {
-            GradientDrawable rim = new GradientDrawable();
-            rim.setColor(0x66808080);
-            rim.setCornerRadius(8 * getResources().getDisplayMetrics().density);
-            int transparentWidth = visibleWidth - hiddenWidth;
-            shortcut.setBackground(new InsetDrawable(rim, onLeft ? 0 : transparentWidth, verticalMargin,
-                    onLeft ? transparentWidth : 0, verticalMargin));
-        } else {
-            shortcut.setBackground(null);
-        }
-        // 背景の余白がアイコンの配置に引き継がれないようにする。
-        shortcut.setPadding(0, 0, 0, 0);
+        icon.setVisibility(expanded && !hidden ? View.VISIBLE : View.INVISIBLE);
+        edgeBar.setVisibility(expanded && !hidden ? View.INVISIBLE : View.VISIBLE);
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) edgeBar.getLayoutParams();
+        params.width = hidden ? Math.max(1, hiddenWidth / 2) : hiddenWidth;
+        params.gravity = (onLeft ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL;
+        edgeBar.setLayoutParams(params);
     }
 
     private void showRemoveTarget() {
