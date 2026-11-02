@@ -16,7 +16,8 @@ def getGitHash = { -> return getCmdOutput(["git", "rev-parse", "--short", "HEAD"
 def getGitBranch = { -> return getCmdOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"]) }
 
 def packageName = "com.beemdevelopment.aegis"
-def fileProviderAuthority = "${packageName}.fileprovider"
+def releaseApplicationId = "com.munerin2018.aegisedge"
+def fileProviderAuthority = "${releaseApplicationId}.fileprovider"
 def fileProviderAuthorityDebug = "${packageName}.debug.fileprovider"
 
 android {
@@ -122,6 +123,12 @@ android {
     }
     buildFeatures {
         buildConfig true
+    }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.applicationId.set(releaseApplicationId)
     }
 }
 
