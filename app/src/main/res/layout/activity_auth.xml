@@ -24,7 +24,7 @@
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_marginBottom="20dp"
-                app:srcCompat="@drawable/ic_aegis_iconx" />
+                app:srcCompat="@mipmap/ic_edge" />
 
             <TextView
                 android:layout_width="match_parent"
