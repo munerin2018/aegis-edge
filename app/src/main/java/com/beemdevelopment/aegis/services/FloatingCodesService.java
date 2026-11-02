@@ -12,6 +12,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -51,6 +52,8 @@ public class FloatingCodesService extends Service {
     private boolean dragging;
     private float touchStartX;
     private float touchStartY;
+    private long movementStartTime;
+    private long touchDownTime;
     private int dragStartX;
     private int dragStartY;
     private boolean swiped;
@@ -129,10 +132,6 @@ public class FloatingCodesService extends Service {
                     startActivity(open);
                 }
             });
-            shortcut.setOnLongClickListener(v -> {
-                startDrag();
-                return true;
-            });
             shortcut.setOnTouchListener((v, event) -> {
                 if (event.getActionMasked() == MotionEvent.ACTION_OUTSIDE) {
                     if (expanded && !dragging) setExpanded(false);
@@ -140,6 +139,8 @@ public class FloatingCodesService extends Service {
                 } else if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
                     touchStartX = event.getRawX();
                     touchStartY = event.getRawY();
+                    movementStartTime = 0;
+                    touchDownTime = SystemClock.uptimeMillis();
                     swiped = false;
                     dragging = false;
                 } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && dragging) {
@@ -163,6 +164,25 @@ public class FloatingCodesService extends Service {
                 } else if ((event.getActionMasked() == MotionEvent.ACTION_MOVE
                         || event.getActionMasked() == MotionEvent.ACTION_UP) && !swiped) {
                     float delta = event.getRawX() - touchStartX;
+                    float deltaY = event.getRawY() - touchStartY;
+                    if (movementStartTime == 0
+                            && Math.max(Math.abs(delta), Math.abs(deltaY)) >= density) {
+                        movementStartTime = SystemClock.uptimeMillis();
+                    }
+                    boolean moved = Math.max(Math.abs(delta), Math.abs(deltaY)) >= 6 * density;
+                    boolean moveShortcut = event.getActionMasked() == MotionEvent.ACTION_MOVE && moved
+                            && (Math.abs(deltaY) > Math.abs(delta)
+                            || movementStartTime - touchDownTime >= 150);
+                    if (moveShortcut) {
+                        v.setPressed(false);
+                        v.cancelLongPress();
+                        startDrag();
+                        shortcutParams.x = clampX(dragStartX + Math.round(delta));
+                        shortcutParams.y = clampY(dragStartY + Math.round(deltaY));
+                        windows.updateViewLayout(shortcut, shortcutParams);
+                        updateRemoveTarget(isOverRemoveTarget(event));
+                        return true;
+                    }
                     if (Math.abs(delta) >= 6 * density) {
                         swiped = true;
                         v.setPressed(false);
