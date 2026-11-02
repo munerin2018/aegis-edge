@@ -43,6 +43,8 @@ public class FloatingCodesService extends Service {
     private int iconSize;
     private int visibleWidth;
     private int hiddenWidth;
+    private int touchHeight;
+    private int verticalMargin;
     private boolean expanded;
     private boolean hidden;
     private boolean onLeft;
@@ -92,13 +94,15 @@ public class FloatingCodesService extends Service {
             icon.setImageDrawable(getApplicationInfo().loadIcon(getPackageManager()));
             icon.setAlpha(0.55f);
             iconSize = (int) (48 * density);
-            visibleWidth = (int) (24 * density);
+            visibleWidth = (int) (40 * density);
             hiddenWidth = Math.max(1, (int) (8 * density));
+            verticalMargin = (int) (16 * density);
+            touchHeight = iconSize + 2 * verticalMargin;
             shortcut.addView(icon, new FrameLayout.LayoutParams(iconSize, iconSize,
                     (onLeft ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL));
             int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                     ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
-            shortcutParams = new WindowManager.LayoutParams(visibleWidth, iconSize, type,
+            shortcutParams = new WindowManager.LayoutParams(visibleWidth, touchHeight, type,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_SECURE
                             | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                     PixelFormat.TRANSLUCENT);
@@ -106,8 +110,9 @@ public class FloatingCodesService extends Service {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 shortcutParams.setFitInsetsSides(WindowInsets.Side.TOP | WindowInsets.Side.BOTTOM);
             }
-            shortcutParams.y = clampY(positionPrefs.getInt("top", (int) (120 * density)));
+            shortcutParams.y = clampY(positionPrefs.getInt("top", (int) (120 * density)) - verticalMargin);
             updateHiddenAppearance();
+            updateIconOffset(visibleWidth);
             shortcut.setOnClickListener(v -> {
                 if (hidden) setHidden(false);
                 if (!expanded) {
@@ -148,11 +153,13 @@ public class FloatingCodesService extends Service {
                 } else if (event.getActionMasked() == MotionEvent.ACTION_CANCEL && dragging) {
                     finishDrag();
                     return true;
-                } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && !swiped) {
+                } else if ((event.getActionMasked() == MotionEvent.ACTION_MOVE
+                        || event.getActionMasked() == MotionEvent.ACTION_UP) && !swiped) {
                     float delta = event.getRawX() - touchStartX;
-                    if (Math.abs(delta) > 10 * density) {
+                    if (Math.abs(delta) >= 6 * density) {
                         swiped = true;
                         v.setPressed(false);
+                        v.cancelLongPress();
                         boolean inward = onLeft ? delta > 0 : delta < 0;
                         if (inward) {
                             if (hidden) setHidden(false);
@@ -198,6 +205,7 @@ public class FloatingCodesService extends Service {
         shortcutParams.gravity = Gravity.LEFT | Gravity.TOP;
         shortcutParams.x = dragStartX;
         setIconGravity(false);
+        updateIconOffset(iconSize);
         windows.updateViewLayout(shortcut, shortcutParams);
         showRemoveTarget();
     }
@@ -211,7 +219,7 @@ public class FloatingCodesService extends Service {
         shortcutParams.y = clampY(shortcutParams.y);
         setIconGravity(onLeft);
         windows.updateViewLayout(shortcut, shortcutParams);
-        positionPrefs.edit().putBoolean("left", onLeft).putInt("top", shortcutParams.y).apply();
+        positionPrefs.edit().putBoolean("left", onLeft).putInt("top", shortcutParams.y + verticalMargin).apply();
         setExpanded(false);
     }
 
@@ -232,7 +240,7 @@ public class FloatingCodesService extends Service {
     }
 
     private int clampY(int y) {
-        return Math.max(0, Math.min(y, Math.max(0, screenSize().heightPixels - iconSize)));
+        return Math.max(0, Math.min(y, Math.max(0, screenSize().heightPixels - touchHeight)));
     }
 
     private void setExpanded(boolean show) {
@@ -244,9 +252,15 @@ public class FloatingCodesService extends Service {
         slideAnimator.setDuration(160);
         slideAnimator.addUpdateListener(animation -> {
             shortcutParams.width = (int) animation.getAnimatedValue();
+            updateIconOffset(shortcutParams.width);
             windows.updateViewLayout(shortcut, shortcutParams);
         });
         slideAnimator.start();
+    }
+
+    private void updateIconOffset(int width) {
+        int offset = Math.max(0, (iconSize - width) * 2);
+        icon.setTranslationX(onLeft ? -offset : offset);
     }
 
     private void setHidden(boolean value) {
@@ -263,8 +277,8 @@ public class FloatingCodesService extends Service {
             rim.setColor(0x66808080);
             rim.setCornerRadius(8 * getResources().getDisplayMetrics().density);
             int transparentWidth = visibleWidth - hiddenWidth;
-            shortcut.setBackground(new InsetDrawable(rim, onLeft ? 0 : transparentWidth, 0,
-                    onLeft ? transparentWidth : 0, 0));
+            shortcut.setBackground(new InsetDrawable(rim, onLeft ? 0 : transparentWidth, verticalMargin,
+                    onLeft ? transparentWidth : 0, verticalMargin));
         } else {
             shortcut.setBackground(null);
         }
